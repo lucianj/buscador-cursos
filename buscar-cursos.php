@@ -1,27 +1,18 @@
 <?php
 
 require "vendor/autoload.php";
+require "src/Buscador.php";
 
+use Alura\BuscadorDeCursos\Buscador;
 use GuzzleHttp\Client;
 use Symfony\Component\DomCrawler\Crawler;
 
-$client = new Client();
-$res = $client->request('GET', 'https://www.alura.com.br/carreiras/desenvolvimento-backend-php/');
+$client = new Client(['base_uri' => 'https://www.alura.com.br/']);
+$crawler = new Crawler();
 
-
-$html = $res->getBody();
-//var_dump($html);
-
-//echo $html;
-
-$crawler = new Crawler($html);
-
-$cursos = $crawler->filter('h5.course-card__title');
-//var_dump($cursos);
-
-//$cursos = $crawler->filter('span.course-card__title');
-
+$buscador = new Buscador($client, $crawler);
+$cursos = $buscador->buscar('/carreiras/desenvolvimento-backend-php/');
 
 foreach ($cursos as $curso) {
-    echo $curso->nodeValue . PHP_EOL;
+    echo $curso . PHP_EOL;
 }
