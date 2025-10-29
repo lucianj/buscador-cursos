@@ -12,6 +12,7 @@ class ComposerStaticInitb25f330a1026b8c0679c0135011174e7
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
+        'de544cda67f0bba8c02a5914928467b0' => __DIR__ . '/../..' . '/functions.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -93,8 +94,6 @@ class ComposerStaticInitb25f330a1026b8c0679c0135011174e7
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'Teste' => __DIR__ . '/../..' . '/Teste.php',
-        'Teste2' => __DIR__ . '/../..' . '/Teste.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
