@@ -12,9 +12,12 @@ namespace PHPUnit\Framework;
 use Countable;
 
 /**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ * A Test can be run and collect its results.
  */
 interface Test extends Countable
 {
-    public function run(): void;
+    /**
+     * Runs a test and collects its result in a TestResult instance.
+     */
+    public function run(?TestResult $result = null): TestResult;
 }

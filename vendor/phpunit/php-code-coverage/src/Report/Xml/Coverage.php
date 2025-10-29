@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 /*
- * This file is part of phpunit/php-code-coverage.
+ * This file is part of the php-code-coverage package.
  *
  * (c) Sebastian Bergmann <sebastian@phpunit.de>
  *
@@ -9,36 +9,42 @@
  */
 namespace SebastianBergmann\CodeCoverage\Report\Xml;
 
-use DOMElement;
-use SebastianBergmann\CodeCoverage\ReportAlreadyFinalizedException;
-use XMLWriter;
+use SebastianBergmann\CodeCoverage\RuntimeException;
 
-/**
- * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
- */
 final class Coverage
 {
-    private readonly XMLWriter $writer;
-    private readonly DOMElement $contextNode;
-    private bool $finalized = false;
+    /**
+     * @var \XMLWriter
+     */
+    private $writer;
 
-    public function __construct(DOMElement $context, string $line)
+    /**
+     * @var \DOMElement
+     */
+    private $contextNode;
+
+    /**
+     * @var bool
+     */
+    private $finalized = false;
+
+    public function __construct(\DOMElement $context, string $line)
     {
         $this->contextNode = $context;
 
-        $this->writer = new XMLWriter;
+        $this->writer = new \XMLWriter();
         $this->writer->openMemory();
         $this->writer->startElementNS(null, $context->nodeName, 'https://schema.phpunit.de/coverage/1.0');
         $this->writer->writeAttribute('nr', $line);
     }
 
     /**
-     * @throws ReportAlreadyFinalizedException
+     * @throws RuntimeException
      */
     public function addTest(string $test): void
     {
         if ($this->finalized) {
-            throw new ReportAlreadyFinalizedException;
+            throw new RuntimeException('Coverage Report already finalized');
         }
 
         $this->writer->startElement('covered');
@@ -55,7 +61,7 @@ final class Coverage
 
         $this->contextNode->parentNode->replaceChild(
             $fragment,
-            $this->contextNode,
+            $this->contextNode
         );
 
         $this->finalized = true;

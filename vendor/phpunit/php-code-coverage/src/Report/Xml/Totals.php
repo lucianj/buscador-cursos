@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 /*
- * This file is part of phpunit/php-code-coverage.
+ * This file is part of the php-code-coverage package.
  *
  * (c) Sebastian Bergmann <sebastian@phpunit.de>
  *
@@ -9,51 +9,68 @@
  */
 namespace SebastianBergmann\CodeCoverage\Report\Xml;
 
-use function sprintf;
-use DOMElement;
-use DOMNode;
-use SebastianBergmann\CodeCoverage\Util\Percentage;
+use SebastianBergmann\CodeCoverage\Util;
 
-/**
- * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
- */
 final class Totals
 {
-    private readonly DOMNode $container;
-    private readonly DOMElement $linesNode;
-    private readonly DOMElement $methodsNode;
-    private readonly DOMElement $functionsNode;
-    private readonly DOMElement $classesNode;
-    private readonly DOMElement $traitsNode;
+    /**
+     * @var \DOMNode
+     */
+    private $container;
 
-    public function __construct(DOMElement $container)
+    /**
+     * @var \DOMElement
+     */
+    private $linesNode;
+
+    /**
+     * @var \DOMElement
+     */
+    private $methodsNode;
+
+    /**
+     * @var \DOMElement
+     */
+    private $functionsNode;
+
+    /**
+     * @var \DOMElement
+     */
+    private $classesNode;
+
+    /**
+     * @var \DOMElement
+     */
+    private $traitsNode;
+
+    public function __construct(\DOMElement $container)
     {
         $this->container = $container;
         $dom             = $container->ownerDocument;
 
         $this->linesNode = $dom->createElementNS(
             'https://schema.phpunit.de/coverage/1.0',
-            'lines',
+            'lines'
         );
 
         $this->methodsNode = $dom->createElementNS(
             'https://schema.phpunit.de/coverage/1.0',
-            'methods',
+            'methods'
         );
 
         $this->functionsNode = $dom->createElementNS(
             'https://schema.phpunit.de/coverage/1.0',
-            'functions',
+            'functions'
         );
 
         $this->classesNode = $dom->createElementNS(
             'https://schema.phpunit.de/coverage/1.0',
-            'classes',
+            'classes'
         );
 
         $this->traitsNode = $dom->createElementNS(
             'https://schema.phpunit.de/coverage/1.0',
-            'traits',
+            'traits'
         );
 
         $container->appendChild($this->linesNode);
@@ -63,7 +80,7 @@ final class Totals
         $container->appendChild($this->traitsNode);
     }
 
-    public function container(): DOMNode
+    public function getContainer(): \DOMNode
     {
         return $this->container;
     }
@@ -77,7 +94,7 @@ final class Totals
         $this->linesNode->setAttribute('executed', (string) $executed);
         $this->linesNode->setAttribute(
             'percent',
-            $executable === 0 ? '0' : sprintf('%01.2F', Percentage::fromFractionAndTotal($executed, $executable)->asFloat()),
+            $executable === 0 ? '0' : \sprintf('%01.2F', Util::percent($executed, $executable))
         );
     }
 
@@ -87,7 +104,7 @@ final class Totals
         $this->classesNode->setAttribute('tested', (string) $tested);
         $this->classesNode->setAttribute(
             'percent',
-            $count === 0 ? '0' : sprintf('%01.2F', Percentage::fromFractionAndTotal($tested, $count)->asFloat()),
+            $count === 0 ? '0' : \sprintf('%01.2F', Util::percent($tested, $count))
         );
     }
 
@@ -97,7 +114,7 @@ final class Totals
         $this->traitsNode->setAttribute('tested', (string) $tested);
         $this->traitsNode->setAttribute(
             'percent',
-            $count === 0 ? '0' : sprintf('%01.2F', Percentage::fromFractionAndTotal($tested, $count)->asFloat()),
+            $count === 0 ? '0' : \sprintf('%01.2F', Util::percent($tested, $count))
         );
     }
 
@@ -107,7 +124,7 @@ final class Totals
         $this->methodsNode->setAttribute('tested', (string) $tested);
         $this->methodsNode->setAttribute(
             'percent',
-            $count === 0 ? '0' : sprintf('%01.2F', Percentage::fromFractionAndTotal($tested, $count)->asFloat()),
+            $count === 0 ? '0' : \sprintf('%01.2F', Util::percent($tested, $count))
         );
     }
 
@@ -117,7 +134,7 @@ final class Totals
         $this->functionsNode->setAttribute('tested', (string) $tested);
         $this->functionsNode->setAttribute(
             'percent',
-            $count === 0 ? '0' : sprintf('%01.2F', Percentage::fromFractionAndTotal($tested, $count)->asFloat()),
+            $count === 0 ? '0' : \sprintf('%01.2F', Util::percent($tested, $count))
         );
     }
 }

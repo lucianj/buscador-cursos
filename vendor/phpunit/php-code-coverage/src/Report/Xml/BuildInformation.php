@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 /*
- * This file is part of phpunit/php-code-coverage.
+ * This file is part of the php-code-coverage package.
  *
  * (c) Sebastian Bergmann <sebastian@phpunit.de>
  *
@@ -9,46 +9,47 @@
  */
 namespace SebastianBergmann\CodeCoverage\Report\Xml;
 
-use function assert;
-use function phpversion;
-use DateTimeImmutable;
-use DOMElement;
 use SebastianBergmann\Environment\Runtime;
 
-/**
- * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
- */
 final class BuildInformation
 {
-    private readonly DOMElement $contextNode;
+    /**
+     * @var \DOMElement
+     */
+    private $contextNode;
 
-    public function __construct(DOMElement $contextNode)
+    public function __construct(\DOMElement $contextNode)
     {
         $this->contextNode = $contextNode;
     }
 
     public function setRuntimeInformation(Runtime $runtime): void
     {
-        $runtimeNode = $this->nodeByName('runtime');
+        $runtimeNode = $this->getNodeByName('runtime');
 
         $runtimeNode->setAttribute('name', $runtime->getName());
         $runtimeNode->setAttribute('version', $runtime->getVersion());
         $runtimeNode->setAttribute('url', $runtime->getVendorUrl());
 
-        $driverNode = $this->nodeByName('driver');
+        $driverNode = $this->getNodeByName('driver');
+
+        if ($runtime->hasPHPDBGCodeCoverage()) {
+            $driverNode->setAttribute('name', 'phpdbg');
+            $driverNode->setAttribute('version', \constant('PHPDBG_VERSION'));
+        }
 
         if ($runtime->hasXdebug()) {
             $driverNode->setAttribute('name', 'xdebug');
-            $driverNode->setAttribute('version', phpversion('xdebug'));
+            $driverNode->setAttribute('version', \phpversion('xdebug'));
         }
 
         if ($runtime->hasPCOV()) {
             $driverNode->setAttribute('name', 'pcov');
-            $driverNode->setAttribute('version', phpversion('pcov'));
+            $driverNode->setAttribute('version', \phpversion('pcov'));
         }
     }
 
-    public function setBuildTime(DateTimeImmutable $date): void
+    public function setBuildTime(\DateTime $date): void
     {
         $this->contextNode->setAttribute('time', $date->format('D M j G:i:s T Y'));
     }
@@ -59,23 +60,21 @@ final class BuildInformation
         $this->contextNode->setAttribute('coverage', $coverageVersion);
     }
 
-    private function nodeByName(string $name): DOMElement
+    private function getNodeByName(string $name): \DOMElement
     {
         $node = $this->contextNode->getElementsByTagNameNS(
             'https://schema.phpunit.de/coverage/1.0',
-            $name,
+            $name
         )->item(0);
 
         if (!$node) {
             $node = $this->contextNode->appendChild(
                 $this->contextNode->ownerDocument->createElementNS(
                     'https://schema.phpunit.de/coverage/1.0',
-                    $name,
-                ),
+                    $name
+                )
             );
         }
-
-        assert($node instanceof DOMElement);
 
         return $node;
     }

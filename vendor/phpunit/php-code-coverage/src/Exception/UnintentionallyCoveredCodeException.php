@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 /*
- * This file is part of phpunit/php-code-coverage.
+ * This file is part of the php-code-coverage package.
  *
  * (c) Sebastian Bergmann <sebastian@phpunit.de>
  *
@@ -9,18 +9,16 @@
  */
 namespace SebastianBergmann\CodeCoverage;
 
-use RuntimeException;
-
-final class UnintentionallyCoveredCodeException extends RuntimeException implements Exception
+/**
+ * Exception that is raised when code is unintentionally covered.
+ */
+final class UnintentionallyCoveredCodeException extends RuntimeException
 {
     /**
-     * @var list<string>
+     * @var array
      */
-    private readonly array $unintentionallyCoveredUnits;
+    private $unintentionallyCoveredUnits = [];
 
-    /**
-     * @param list<string> $unintentionallyCoveredUnits
-     */
     public function __construct(array $unintentionallyCoveredUnits)
     {
         $this->unintentionallyCoveredUnits = $unintentionallyCoveredUnits;
@@ -28,9 +26,6 @@ final class UnintentionallyCoveredCodeException extends RuntimeException impleme
         parent::__construct($this->toString());
     }
 
-    /**
-     * @return list<string>
-     */
     public function getUnintentionallyCoveredUnits(): array
     {
         return $this->unintentionallyCoveredUnits;

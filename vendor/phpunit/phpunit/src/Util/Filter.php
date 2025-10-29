@@ -15,110 +15,93 @@ use function in_array;
 use function is_file;
 use function realpath;
 use function sprintf;
-use function str_starts_with;
+use function strpos;
 use PHPUnit\Framework\Exception;
-use PHPUnit\Framework\PhptAssertionFailedError;
+use PHPUnit\Framework\SyntheticError;
 use Throwable;
 
 /**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
- *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Filter
+final class Filter
 {
     /**
      * @throws Exception
      */
-    public static function stackTraceFromThrowableAsString(Throwable $t, bool $unwrap = true): string
+    public static function getFilteredStacktrace(Throwable $t): string
     {
-        if ($t instanceof PhptAssertionFailedError) {
-            $stackTrace = $t->syntheticTrace();
-            $file       = $t->syntheticFile();
-            $line       = $t->syntheticLine();
+        $filteredStacktrace = '';
+
+        if ($t instanceof SyntheticError) {
+            $eTrace = $t->getSyntheticTrace();
+            $eFile  = $t->getSyntheticFile();
+            $eLine  = $t->getSyntheticLine();
         } elseif ($t instanceof Exception) {
-            $stackTrace = $t->getSerializableTrace();
-            $file       = $t->getFile();
-            $line       = $t->getLine();
+            $eTrace = $t->getSerializableTrace();
+            $eFile  = $t->getFile();
+            $eLine  = $t->getLine();
         } else {
-            if ($unwrap && $t->getPrevious()) {
+            if ($t->getPrevious()) {
                 $t = $t->getPrevious();
             }
 
-            $stackTrace = $t->getTrace();
-            $file       = $t->getFile();
-            $line       = $t->getLine();
+            $eTrace = $t->getTrace();
+            $eFile  = $t->getFile();
+            $eLine  = $t->getLine();
         }
 
-        if (!self::frameExists($stackTrace, $file, $line)) {
+        if (!self::frameExists($eTrace, $eFile, $eLine)) {
             array_unshift(
-                $stackTrace,
-                ['file' => $file, 'line' => $line],
+                $eTrace,
+                ['file' => $eFile, 'line' => $eLine]
             );
         }
 
-        return self::stackTraceAsString($stackTrace);
-    }
+        $prefix    = defined('__PHPUNIT_PHAR_ROOT__') ? __PHPUNIT_PHAR_ROOT__ : false;
+        $blacklist = new Blacklist;
 
-    /**
-     * @param list<array{file: string, line: ?int, class?: class-string, function?: string, type: string}> $frames
-     */
-    public static function stackTraceAsString(array $frames): string
-    {
-        $buffer      = '';
-        $prefix      = defined('__PHPUNIT_PHAR_ROOT__') ? __PHPUNIT_PHAR_ROOT__ : false;
-        $excludeList = new ExcludeList;
-
-        foreach ($frames as $frame) {
-            if (self::shouldPrintFrame($frame, $prefix, $excludeList)) {
-                $buffer .= sprintf(
+        foreach ($eTrace as $frame) {
+            if (self::shouldPrintFrame($frame, $prefix, $blacklist)) {
+                $filteredStacktrace .= sprintf(
                     "%s:%s\n",
                     $frame['file'],
-                    $frame['line'] ?? '?',
+                    $frame['line'] ?? '?'
                 );
             }
         }
 
-        return $buffer;
+        return $filteredStacktrace;
     }
 
-    /**
-     * @param array{file?: non-empty-string} $frame
-     */
-    private static function shouldPrintFrame(array $frame, false|string $prefix, ExcludeList $excludeList): bool
+    private static function shouldPrintFrame($frame, $prefix, Blacklist $blacklist): bool
     {
         if (!isset($frame['file'])) {
             return false;
         }
 
         $file              = $frame['file'];
-        $fileIsNotPrefixed = $prefix === false || !str_starts_with($file, $prefix);
+        $fileIsNotPrefixed = $prefix === false || strpos($file, $prefix) !== 0;
 
         // @see https://github.com/sebastianbergmann/phpunit/issues/4033
         if (isset($GLOBALS['_SERVER']['SCRIPT_NAME'])) {
             $script = realpath($GLOBALS['_SERVER']['SCRIPT_NAME']);
         } else {
-            // @codeCoverageIgnoreStart
             $script = '';
-            // @codeCoverageIgnoreEnd
         }
 
-        return $fileIsNotPrefixed &&
-               $file !== $script &&
-               self::fileIsExcluded($file, $excludeList) &&
-               is_file($file);
+        return is_file($file) &&
+               self::fileIsBlacklisted($file, $blacklist) &&
+               $fileIsNotPrefixed &&
+               $file !== $script;
     }
 
-    private static function fileIsExcluded(string $file, ExcludeList $excludeList): bool
+    private static function fileIsBlacklisted($file, Blacklist $blacklist): bool
     {
-        return (empty($GLOBALS['__PHPUNIT_ISOLATION_EXCLUDE_LIST']) ||
-                !in_array($file, $GLOBALS['__PHPUNIT_ISOLATION_EXCLUDE_LIST'], true)) &&
-                !$excludeList->isExcluded($file);
+        return (empty($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) ||
+                !in_array($file, $GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST'], true)) &&
+               !$blacklist->isBlacklisted($file);
     }
 
-    /**
-     * @param list<array{file?: non-empty-string, line?: int}> $trace
-     */
     private static function frameExists(array $trace, string $file, int $line): bool
     {
         foreach ($trace as $frame) {

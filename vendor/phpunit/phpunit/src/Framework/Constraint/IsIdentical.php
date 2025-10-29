@@ -9,25 +9,34 @@
  */
 namespace PHPUnit\Framework\Constraint;
 
-use function explode;
-use function gettype;
+use function get_class;
 use function is_array;
 use function is_object;
 use function is_string;
 use function sprintf;
 use PHPUnit\Framework\ExpectationFailedException;
-use PHPUnit\Util\Exporter;
 use SebastianBergmann\Comparator\ComparisonFailure;
-use UnitEnum;
+use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 /**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ * Constraint that asserts that one value is identical to another.
+ *
+ * Identical check is performed with PHP's === operator, the operator is
+ * explained in detail at
+ * {@url https://php.net/manual/en/types.comparisons.php}.
+ * Two values are identical if they have the same value and are of the same
+ * type.
+ *
+ * The expected value is passed in the constructor.
  */
 final class IsIdentical extends Constraint
 {
-    private readonly mixed $value;
+    /**
+     * @var mixed
+     */
+    private $value;
 
-    public function __construct(mixed $value)
+    public function __construct($value)
     {
         $this->value = $value;
     }
@@ -43,8 +52,9 @@ final class IsIdentical extends Constraint
      * failure.
      *
      * @throws ExpectationFailedException
+     * @throws InvalidArgumentException
      */
-    public function evaluate(mixed $other, string $description = '', bool $returnResult = false): ?bool
+    public function evaluate($other, string $description = '', bool $returnResult = false)
     {
         $success = $this->value === $other;
 
@@ -61,37 +71,37 @@ final class IsIdentical extends Constraint
                     $this->value,
                     $other,
                     sprintf("'%s'", $this->value),
-                    sprintf("'%s'", $other),
+                    sprintf("'%s'", $other)
                 );
             }
 
-            // if both values are array or enums, make sure a diff is generated
-            if ((is_array($this->value) && is_array($other)) || ($this->value instanceof UnitEnum && $other instanceof UnitEnum)) {
+            // if both values are array, make sure a diff is generated
+            if (is_array($this->value) && is_array($other)) {
                 $f = new ComparisonFailure(
                     $this->value,
                     $other,
-                    Exporter::export($this->value),
-                    Exporter::export($other),
+                    $this->exporter()->export($this->value),
+                    $this->exporter()->export($other)
                 );
             }
 
             $this->fail($other, $description, $f);
         }
-
-        return null;
     }
 
     /**
      * Returns a string representation of the constraint.
+     *
+     * @throws InvalidArgumentException
      */
     public function toString(): string
     {
         if (is_object($this->value)) {
             return 'is identical to an object of class "' .
-                $this->value::class . '"';
+                get_class($this->value) . '"';
         }
 
-        return 'is identical to ' . Exporter::export($this->value);
+        return 'is identical to ' . $this->exporter()->export($this->value);
     }
 
     /**
@@ -99,15 +109,15 @@ final class IsIdentical extends Constraint
      *
      * The beginning of failure messages is "Failed asserting that" in most
      * cases. This method should return the second part of that sentence.
+     *
+     * @param mixed $other evaluated value or object
+     *
+     * @throws InvalidArgumentException
      */
-    protected function failureDescription(mixed $other): string
+    protected function failureDescription($other): string
     {
         if (is_object($this->value) && is_object($other)) {
             return 'two variables reference the same object';
-        }
-
-        if (explode(' ', gettype($this->value), 2)[0] === 'resource' && explode(' ', gettype($other), 2)[0] === 'resource') {
-            return 'two variables reference the same resource';
         }
 
         if (is_string($this->value) && is_string($other)) {
