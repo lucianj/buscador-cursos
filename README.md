@@ -2,7 +2,7 @@
 
 Projeto que implementa um webcrawler para buscar cursos utilizando php, e o respectivo gerenciamento de pacotes do composer.
 
-### Instalar dependencias
+### Instalar dependências
 
     
     composer install
