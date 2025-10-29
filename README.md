@@ -4,15 +4,15 @@ Projeto que implementa um webcrawler para buscar cursos utilizando php, e o resp
 
 ### Instalar dependencias
 
-    ```
+    
     composer install
-    ```
+    
 
 ### Executar projeto
 
-    ```
+    
     php buscador-cursos.php
-    ```
+    
 
 
 
