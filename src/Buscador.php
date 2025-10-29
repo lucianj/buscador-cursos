@@ -23,7 +23,8 @@ class Buscador
         $this->crawler = $crawler;
     }
 
-    public function buscar(string $url): array{
+    public function buscar(string $url): array
+    {
         $res = $this->httpClient
             ->request('GET', $url);
         $html = $res->getBody();
@@ -32,8 +33,7 @@ class Buscador
         $elementosCursos = $this->crawler->filter('h5.course-card__title');
 
         $cursos = [];
-        foreach($elementosCursos as $elemento)
-        {
+        foreach($elementosCursos as $elemento){
             $cursos[] = $elemento->textContent;
         }
         return $cursos;
