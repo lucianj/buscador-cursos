@@ -8,5 +8,7 @@
             "email": "lucianjosegoncales@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "guzzlehttp/guzzle": "^7.10"
+    }
 }
