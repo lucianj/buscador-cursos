@@ -1,0 +1,12 @@
+{
+    "name": "lucian/buscador-cursos",
+    "description": "Projeto buscador de cursos na plataforma da Alura.",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Lucian",
+            "email": "lucianjosegoncales@gmail.com"
+        }
+    ],
+    "require": {}
+}
